@@ -5,6 +5,6 @@ data class Student(
     val studentYear: Int?=null,
     val studentSubject: String?=null,
     var studentsTutorId: String?=null,
-    val studentPicUrl: String?=null,
+    val studentPic: ByteArray?=null,
     val _id: String?=null
 )

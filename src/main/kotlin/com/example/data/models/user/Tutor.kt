@@ -6,6 +6,6 @@ data class Tutor(
     val email: String,
     val hashedPassword: String,
     val name: String,
-    val profilePicUrl: String?=null,
+    val profilePic: ByteArray?=null,
     val _id: String?=null
 ) : Principal

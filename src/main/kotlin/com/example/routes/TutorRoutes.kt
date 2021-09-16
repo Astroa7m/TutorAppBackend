@@ -7,6 +7,7 @@ import com.example.data.models.request.Register
 import com.example.data.models.request.Update
 import com.example.data.models.response.UserResponse
 import com.example.data.models.user.Tutor
+import com.example.data.models.user.tutors.student.Student
 import com.example.util.getUserExistenceResult
 import com.example.util.hashPassword
 import com.example.util.validateUserInfo
@@ -45,7 +46,7 @@ fun Route.tutorRoute() {
             //hashing the password before putting it into the database
             val tutor = Tutor(
                 registeredTutor.email, registeredTutor.password.hashPassword(), registeredTutor.name,
-                registeredTutor.profilePicUrl)
+                registeredTutor.profilePic)
             val insertionResult = DatabaseConnection.tutorCollection.insertOne(tutor)
             if(insertionResult.wasAcknowledged())
                 call.respond(UserResponse(true, tutor, generateToken(tutor)))
@@ -95,10 +96,10 @@ fun Route.tutorRoute() {
                 val tutorEmail = updatedInfo.email ?: call.principal<Tutor>()!!.email
                 val tutorHashedPw = updatedInfo.password?.hashPassword() ?: call.principal<Tutor>()!!.hashedPassword
                 val tutorName = updatedInfo.name ?: call.principal<Tutor>()!!.name
-                val tutorPhotoUrl = updatedInfo.profilePicUrl ?: call.principal<Tutor>()!!.profilePicUrl
+                val tutorProfilePic = updatedInfo.profilePic ?: call.principal<Tutor>()!!.profilePic
                 val tutorId = call.principal<Tutor>()!!._id
 
-                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName, tutorPhotoUrl, tutorId)
+                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName, tutorProfilePic, tutorId)
 
                 val updateResult = DatabaseConnection.tutorCollection.updateOne(Tutor::_id eq tutorId, updatedTutor)
 
