@@ -1,0 +1,1 @@
+web: build/install/TutorAppBackend/bin/TutorAppBackend
