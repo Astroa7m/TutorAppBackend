@@ -46,6 +46,7 @@ fun Route.tutorRoute() {
             //hashing the password before putting it into the database
             val tutor = Tutor(
                 registeredTutor.email, registeredTutor.password.hashPassword(), registeredTutor.name,
+                registeredTutor.modules!!,
                 registeredTutor.profilePic)
             val insertionResult = DatabaseConnection.tutorCollection.insertOne(tutor)
             if(insertionResult.wasAcknowledged())
@@ -98,8 +99,9 @@ fun Route.tutorRoute() {
                 val tutorName = updatedInfo.name ?: call.principal<Tutor>()!!.name
                 val tutorProfilePic = updatedInfo.profilePic ?: call.principal<Tutor>()!!.profilePic
                 val tutorId = call.principal<Tutor>()!!._id
+                val tutorModules = call.principal<Tutor>()!!.modules
 
-                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName, tutorProfilePic, tutorId)
+                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName,tutorModules, tutorProfilePic, tutorId)
 
                 val updateResult = DatabaseConnection.tutorCollection.updateOne(Tutor::_id eq tutorId, updatedTutor)
 
