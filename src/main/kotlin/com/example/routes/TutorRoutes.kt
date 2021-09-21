@@ -99,7 +99,7 @@ fun Route.tutorRoute() {
                 val tutorName = updatedInfo.name ?: call.principal<Tutor>()!!.name
                 val tutorProfilePic = updatedInfo.profilePic ?: call.principal<Tutor>()!!.profilePic
                 val tutorId = call.principal<Tutor>()!!._id
-                val tutorModules = call.principal<Tutor>()!!.modules
+                val tutorModules = updatedInfo.modules ?: call.principal<Tutor>()!!.modules
 
                 val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName,tutorModules, tutorProfilePic, tutorId)
 
