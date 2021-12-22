@@ -6,7 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.models.user.Tutor
 
 object JWTService {
-    private val issuer = "MyServer"
+    private const val issuer = "MyServer"
     private val jwtSecret = System.getenv("JWT_SECRET")
     private val algorithm = Algorithm.HMAC512(jwtSecret)
 

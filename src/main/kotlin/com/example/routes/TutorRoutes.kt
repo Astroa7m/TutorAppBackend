@@ -2,20 +2,25 @@ package com.example.routes
 
 import com.example.authentication.JWTService.generateToken
 import com.example.data.DatabaseConnection
+import com.example.data.WebSocketService
+import com.example.data.models.Message
+import com.example.data.models.TutorSocket
 import com.example.data.models.request.Login
 import com.example.data.models.request.Register
 import com.example.data.models.request.Update
 import com.example.data.models.response.UserResponse
 import com.example.data.models.user.Tutor
-import com.example.data.models.user.tutors.student.Student
 import com.example.util.getUserExistenceResult
 import com.example.util.hashPassword
 import com.example.util.validateUserInfo
 import io.ktor.application.*
 import io.ktor.auth.*
+import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.websocket.*
 import org.litote.kmongo.eq
 
 // TODO: 9/15/2021 ADD TUTORS SUBJECT TO THE MODEL
@@ -24,6 +29,8 @@ private const val USERS = "$API_VERSION/users"
 private const val REGISTER_REQUEST = "$USERS/register"
 private const val LOGIN_REQUEST = "$USERS/login"
 private const val UPDATE_REQUEST = "$USERS/update"
+
+val webSocketService = WebSocketService()
 
 fun Route.tutorRoute() {
     post(REGISTER_REQUEST) {
@@ -113,6 +120,34 @@ fun Route.tutorRoute() {
 
             } catch (e: Exception) {
                 call.respond(UserResponse(false, message = e.message ?: "Could not update user - from catch"))
+            }
+        }
+        webSocket("chat") {
+            val tutorName = call.principal<Tutor>()?.name!!
+            val tutorSocket = TutorSocket(tutorName, this)
+            try{
+                webSocketService.onChatJoined(tutorSocket)
+                for(frame in incoming){
+                    if(frame !is Frame.Text) continue
+                    webSocketService.sendMessage(
+                        frame.readText(),
+                        tutorName
+                    )
+                }
+            }catch (e: Exception){
+                call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
+            }finally {
+                webSocketService.disconnect(tutorSocket)
+            }
+        }
+        get("all-messages"){
+            try {
+                val allMessages = DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
+                call.respond(
+                    allMessages
+                )
+            }catch (e: Exception){
+                call.respond(HttpStatusCode.BadRequest, "Could not retrieve messages")
             }
         }
     }
