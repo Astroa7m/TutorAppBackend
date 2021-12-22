@@ -146,7 +146,7 @@ fun Route.tutorRoute() {
         }
     }
     webSocket(CHAT) {
-        val tutorName = call.principal<Tutor>()?.name!!
+        val tutorName = call.sessions.get<TutorSession>()!!.username
         val tutorSocket = TutorSocket(tutorName, this)
         try{
             webSocketService.onChatJoined(tutorSocket)
