@@ -2,10 +2,12 @@ package com.example.plugins
 
 import com.example.authentication.JWTService
 import com.example.data.DatabaseConnection
+import com.example.data.models.TutorSession
 import com.example.data.models.user.Tutor
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
+import io.ktor.sessions.*
 import org.litote.kmongo.eq
 
 fun Application.configureSecurity() {
@@ -22,4 +24,9 @@ fun Application.configureSecurity() {
             }
         }
     }
+
+    install(Sessions){
+        cookie<TutorSession>("tutor_session")
+    }
+
 }
