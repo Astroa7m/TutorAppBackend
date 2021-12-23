@@ -23,7 +23,6 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.channels.consumeEach
 import org.litote.kmongo.eq
 
 // TODO: 9/15/2021 ADD TUTORS SUBJECT TO THE MODEL
@@ -155,7 +154,7 @@ fun Route.chatWithTutors() {
             val tutorSocket = TutorSocket(tutorName, tutorId, this)
             try {
                 webSocketService.onChatJoined(tutorSocket)
-                incoming.consumeEach { frame ->
+                for(frame in incoming){
                     if (frame is Frame.Text) {
                         webSocketService.sendMessage(
                             frame.readText(),
@@ -168,7 +167,6 @@ fun Route.chatWithTutors() {
                 call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
             } finally {
                 webSocketService.disconnect(tutorSocket)
-                call.respond("Socket Closed")
             }
         }
     }

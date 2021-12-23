@@ -11,6 +11,10 @@ fun Application.configureRouting() {
         updateTutor()
         chatWithTutors()
         getAllMessages()
-        studentsRoute()
+
+        addStudent()
+        getStudents()
+        updateStudent()
+        deleteStudent()
     }
 }

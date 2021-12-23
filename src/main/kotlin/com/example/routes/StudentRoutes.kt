@@ -17,7 +17,7 @@ private const val READ_STUDENT_REQUEST = "$STUDENTS/read"
 private const val UPDATE_STUDENT_REQUEST = "$STUDENTS/update"
 private const val DELETE_STUDENT_REQUEST = "$STUDENTS/delete"
 
-fun Route.studentsRoute(){
+fun Route.addStudent(){
     authenticate("jwt"){
         post(CREATE_STUDENTS_REQUEST){
             val student = try{
@@ -36,6 +36,11 @@ fun Route.studentsRoute(){
                 call.respond(UserResponse(false, message = e.message ?: "Could not insert user"))
             }
         }
+    }
+}
+
+fun Route.getStudents(){
+    authenticate("jwt") {
         get(READ_STUDENT_REQUEST){
             try{
                 val tutorId = call.principal<Tutor>()!!._id
@@ -47,6 +52,11 @@ fun Route.studentsRoute(){
                 return@get
             }
         }
+    }
+}
+
+fun Route.updateStudent(){
+    authenticate("jwt") {
         put("$UPDATE_STUDENT_REQUEST/{id}"){
             val studentId: String?
             val student = try{
@@ -66,6 +76,11 @@ fun Route.studentsRoute(){
                 call.respond(UserResponse(false, message = e.message ?: "Could not update student due to an error"))
             }
         }
+    }
+}
+
+fun Route.deleteStudent(){
+    authenticate("jwt") {
         delete(DELETE_STUDENT_REQUEST){
             val studentId = try{
                 call.request.queryParameters["id"]
