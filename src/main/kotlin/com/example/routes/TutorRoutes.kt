@@ -23,6 +23,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
 import org.litote.kmongo.eq
 
 // TODO: 9/15/2021 ADD TUTORS SUBJECT TO THE MODEL
@@ -45,11 +46,11 @@ fun Route.tutorRoute() {
             call.respond(UserResponse(false, message = "Badly written fields or connection error"))
             return@post
         }
-        try{
+        try {
             val validationResult = validateUserInfo(registeredTutor)
             /* if the user info entered has any problem a response will will stop the process
             and will notify the user with the problem */
-            if(validationResult!=null) {
+            if (validationResult != null) {
                 call.respond(UserResponse(false, message = validationResult))
                 return@post
             }
@@ -58,38 +59,41 @@ fun Route.tutorRoute() {
             val tutor = Tutor(
                 registeredTutor.email, registeredTutor.password.hashPassword(), registeredTutor.name,
                 registeredTutor.modules!!,
-                registeredTutor.profilePic)
+                registeredTutor.profilePic
+            )
             val insertionResult = DatabaseConnection.tutorCollection.insertOne(tutor)
-            if(insertionResult.wasAcknowledged()){
-                if(call.sessions.get<TutorSession>()==null)
-                    call.sessions.set(TutorSession(registeredTutor.name, generateSessionId()))
+            if (insertionResult.wasAcknowledged()) {
                 call.respond(UserResponse(true, tutor, generateToken(tutor)))
             }
 
-        }catch (e: Exception){
-            call.respond(UserResponse(success = false, message = e.message?:"error occurred while inserting information"))
+        } catch (e: Exception) {
+            call.respond(
+                UserResponse(
+                    success = false,
+                    message = e.message ?: "error occurred while inserting information"
+                )
+            )
         }
     }
-    post(LOGIN_REQUEST){
-        val loggedInTutor = try{
+    post(LOGIN_REQUEST) {
+        val loggedInTutor = try {
             call.receive<Login>()
-        }catch (e : Exception){
-            call.respond(UserResponse(false, message = e.message?:"Badly written fields or connection error"))
+        } catch (e: Exception) {
+            call.respond(UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
             return@post
         }
 
-        try{
+        try {
             val userExistenceResult = loggedInTutor.email.getUserExistenceResult()
-            if(userExistenceResult==null
-                ||loggedInTutor.password.hashPassword()!=userExistenceResult.hashedPassword){
+            if (userExistenceResult == null
+                || loggedInTutor.password.hashPassword() != userExistenceResult.hashedPassword
+            ) {
                 call.respond(UserResponse(false, message = "Email or password is incorrect"))
                 return@post
             }
-            if(call.sessions.get<TutorSession>()==null)
-                call.sessions.set(TutorSession(userExistenceResult.name, generateSessionId()))
             call.respond(UserResponse(true, userExistenceResult, generateToken(userExistenceResult)))
-        }catch (e : Exception){
-            call.respond(UserResponse(false, message = e.message?:"error occurred while logging in"))
+        } catch (e: Exception) {
+            call.respond(UserResponse(false, message = e.message ?: "error occurred while logging in"))
         }
     }
     authenticate("jwt") {
@@ -118,12 +122,12 @@ fun Route.tutorRoute() {
                 val tutorId = call.principal<Tutor>()!!._id
                 val tutorModules = updatedInfo.modules ?: call.principal<Tutor>()!!.modules
 
-                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName,tutorModules, tutorProfilePic, tutorId)
+                val updatedTutor = Tutor(tutorEmail, tutorHashedPw, tutorName, tutorModules, tutorProfilePic, tutorId)
 
                 val updateResult = DatabaseConnection.tutorCollection.updateOne(Tutor::_id eq tutorId, updatedTutor)
 
                 if (updateResult.wasAcknowledged()) {
-                    if(call.sessions.get<TutorSession>()==null)
+                    if (call.sessions.get<TutorSession>() == null)
                         call.sessions.set(TutorSession(updatedTutor.name, generateSessionId()))
                     call.respond(UserResponse(true, updatedTutor, generateToken(updatedTutor)))
                 } else {
@@ -136,29 +140,33 @@ fun Route.tutorRoute() {
         }
         webSocket(CHAT) {
             val tutorName = call.principal<Tutor>()!!.name
-            val tutorSocket = TutorSocket(tutorName, this)
-            try{
+            val tutorId = call.principal<Tutor>()!!._id!!
+            val tutorSocket = TutorSocket(tutorName, tutorId, this)
+            try {
                 webSocketService.onChatJoined(tutorSocket)
-                for(frame in incoming){
-                    if(frame !is Frame.Text) continue
-                    webSocketService.sendMessage(
-                        frame.readText(),
-                        tutorName
-                    )
+                incoming.consumeEach { frame ->
+                    if (frame is Frame.Text) {
+                        webSocketService.sendMessage(
+                            frame.readText(),
+                            tutorName,
+                            tutorId
+                        )
+                    }
                 }
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
-            }finally {
+            } finally {
                 webSocketService.disconnect(tutorSocket)
             }
         }
-        get(ALL_MESSAGES){
+        get(ALL_MESSAGES) {
             try {
-                val allMessages = DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
+                val allMessages =
+                    DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
                 call.respond(
                     allMessages
                 )
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "Could not retrieve messages")
             }
         }

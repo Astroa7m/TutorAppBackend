@@ -24,9 +24,4 @@ fun Application.configureSecurity() {
             }
         }
     }
-
-    install(Sessions){
-        cookie<TutorSession>("tutor_session")
-    }
-
 }

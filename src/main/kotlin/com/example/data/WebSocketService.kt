@@ -19,16 +19,17 @@ class WebSocketService {
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    suspend fun sendMessage(messageText: String, sender: String){
+    suspend fun sendMessage(messageText: String, senderName: String, senderId: String){
         val message = Message(
             messageText = messageText,
-            sender = sender,
+            senderName = senderName,
+            senderId = senderId,
             timeStamp = System.currentTimeMillis()
         )
         DatabaseConnection.messagesCollection.insertOne(message)
         tutors.forEach { tutor ->
             val parsedMessage = Json.encodeToString(message)
-            tutor.socket.send(Frame.Text(parsedMessage))
+            tutor.socket.send(parsedMessage)
         }
     }
 
