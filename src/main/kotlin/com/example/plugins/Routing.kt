@@ -1,13 +1,16 @@
 package com.example.plugins
 
-import com.example.routes.studentsRoute
-import com.example.routes.tutorRoute
+import com.example.routes.*
 import io.ktor.application.*
 import io.ktor.routing.*
 
 fun Application.configureRouting() {
     routing {
-        tutorRoute()
+        registerTutor()
+        loginTutor()
+        updateTutor()
+        chatWithTutors()
+        getAllMessages()
         studentsRoute()
     }
 }

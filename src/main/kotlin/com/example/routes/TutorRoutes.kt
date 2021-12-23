@@ -37,7 +37,7 @@ private const val CHAT = "$USERS/chat"
 
 val webSocketService = WebSocketService()
 
-fun Route.tutorRoute() {
+fun Route.registerTutor(){
     post(REGISTER_REQUEST) {
         //taking tutor registration info from server
         val registeredTutor = try {
@@ -75,6 +75,9 @@ fun Route.tutorRoute() {
             )
         }
     }
+}
+
+fun Route.loginTutor(){
     post(LOGIN_REQUEST) {
         val loggedInTutor = try {
             call.receive<Login>()
@@ -96,6 +99,9 @@ fun Route.tutorRoute() {
             call.respond(UserResponse(false, message = e.message ?: "error occurred while logging in"))
         }
     }
+}
+
+fun Route.updateTutor(){
     authenticate("jwt") {
         put(UPDATE_REQUEST) {
             val updatedInfo = try {
@@ -138,6 +144,11 @@ fun Route.tutorRoute() {
                 call.respond(UserResponse(false, message = e.message ?: "Could not update user - from catch"))
             }
         }
+    }
+}
+
+fun Route.chatWithTutors() {
+    authenticate("jwt") {
         webSocket(CHAT) {
             val tutorName = call.principal<Tutor>()!!.name
             val tutorId = call.principal<Tutor>()!!._id!!
@@ -159,6 +170,11 @@ fun Route.tutorRoute() {
                 webSocketService.disconnect(tutorSocket)
             }
         }
+    }
+}
+
+fun Route.getAllMessages(){
+    authenticate("jwt") {
         get(ALL_MESSAGES) {
             try {
                 val allMessages =
