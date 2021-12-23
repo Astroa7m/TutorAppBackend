@@ -168,6 +168,7 @@ fun Route.chatWithTutors() {
                 call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
             } finally {
                 webSocketService.disconnect(tutorSocket)
+                call.respond("Socket Closed")
             }
         }
     }
