@@ -1,5 +1,8 @@
 package com.example.data.models.request
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Update(
     val email: String?=null,
     val password: String?=null,

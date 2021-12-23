@@ -1,5 +1,8 @@
 package com.example.data.models.user.tutors.student
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Student(
     val studentName: String?=null,
     val studentYear: Int?=null,

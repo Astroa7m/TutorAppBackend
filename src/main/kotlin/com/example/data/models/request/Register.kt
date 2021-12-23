@@ -1,5 +1,8 @@
 package com.example.data.models.request
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Register(
     val email: String,
     val password: String,

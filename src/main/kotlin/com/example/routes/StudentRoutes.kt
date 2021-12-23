@@ -6,6 +6,7 @@ import com.example.data.models.user.Tutor
 import com.example.data.models.user.tutors.student.Student
 import io.ktor.application.*
 import io.ktor.auth.*
+import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -23,7 +24,7 @@ fun Route.addStudent(){
             val student = try{
                 call.receive<Student>()
             }catch (e: Exception){
-                call.respond(UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
                 return@post
             }
             try{
@@ -33,7 +34,7 @@ fun Route.addStudent(){
                 if(insertionResult.wasAcknowledged())
                     call.respond(UserResponse(true, message = "Student inserted successfully"))
             }catch (e : Exception){
-                call.respond(UserResponse(false, message = e.message ?: "Could not insert user"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not insert user"))
             }
         }
     }
@@ -48,7 +49,7 @@ fun Route.getStudents(){
                 call.respond(UserResponse(true, studentsList = tutorsStudent))
             }
             catch (e: Exception){
-                call.respond(UserResponse(true, message = e.message ?: "Error occurred while getting students"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Error occurred while getting students"))
                 return@get
             }
         }
@@ -63,7 +64,7 @@ fun Route.updateStudent(){
                 studentId = call.parameters["id"]
                 call.receive<Student>()
             }catch (e: Exception){
-                call.respond(UserResponse(false, message = "Badly written fields or connection error"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Badly written fields or connection error"))
                 return@put
             }
             try {
@@ -73,7 +74,7 @@ fun Route.updateStudent(){
                 if(updateResult.wasAcknowledged())
                     call.respond(UserResponse(true, message = "Update student successfully"))
             }catch (e: Exception){
-                call.respond(UserResponse(false, message = e.message ?: "Could not update student due to an error"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not update student due to an error"))
             }
         }
     }
@@ -85,14 +86,14 @@ fun Route.deleteStudent(){
             val studentId = try{
                 call.request.queryParameters["id"]
             }catch (e: Exception){
-                call.respond(UserResponse(false, message = e.message ?: "No student id found"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "No student id found"))
             }
             try{
                 val deletionResult = DatabaseConnection.studentCollection.deleteOne(Student::_id eq studentId)
                 if(deletionResult.wasAcknowledged())
                     call.respond(UserResponse(true, message = "Student deleted successfully"))
             }catch (e: Exception){
-                call.respond(UserResponse(false, message = e.message ?: "Could not delete student"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not delete student"))
 
             }
         }

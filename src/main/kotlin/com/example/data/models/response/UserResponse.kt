@@ -2,7 +2,9 @@ package com.example.data.models.response
 
 import com.example.data.models.user.Tutor
 import com.example.data.models.user.tutors.student.Student
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserResponse(
     val success: Boolean,
     val tutorInfo: Tutor?=null,

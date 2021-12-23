@@ -42,7 +42,7 @@ fun Route.registerTutor(){
         val registeredTutor = try {
             call.receive<Register>()
         } catch (e: Exception) {
-            call.respond(UserResponse(false, message = "Badly written fields or connection error"))
+            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Badly written fields or connection error"))
             return@post
         }
         try {
@@ -50,7 +50,7 @@ fun Route.registerTutor(){
             /* if the user info entered has any problem a response will will stop the process
             and will notify the user with the problem */
             if (validationResult != null) {
-                call.respond(UserResponse(false, message = validationResult))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = validationResult))
                 return@post
             }
             //if info are valid then create a model and put it into database
@@ -67,6 +67,7 @@ fun Route.registerTutor(){
 
         } catch (e: Exception) {
             call.respond(
+                HttpStatusCode.BadRequest,
                 UserResponse(
                     success = false,
                     message = e.message ?: "error occurred while inserting information"
@@ -81,7 +82,7 @@ fun Route.loginTutor(){
         val loggedInTutor = try {
             call.receive<Login>()
         } catch (e: Exception) {
-            call.respond(UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
+            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
             return@post
         }
 
@@ -90,12 +91,12 @@ fun Route.loginTutor(){
             if (userExistenceResult == null
                 || loggedInTutor.password.hashPassword() != userExistenceResult.hashedPassword
             ) {
-                call.respond(UserResponse(false, message = "Email or password is incorrect"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Email or password is incorrect"))
                 return@post
             }
             call.respond(UserResponse(true, userExistenceResult, generateToken(userExistenceResult)))
         } catch (e: Exception) {
-            call.respond(UserResponse(false, message = e.message ?: "error occurred while logging in"))
+            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "error occurred while logging in"))
         }
     }
 }
@@ -107,6 +108,7 @@ fun Route.updateTutor(){
                 call.receive<Update>()
             } catch (e: Exception) {
                 call.respond(
+                    HttpStatusCode.BadRequest,
                     UserResponse(
                         false,
                         message = e.message ?: "Badly written fields or connection error"
@@ -117,7 +119,7 @@ fun Route.updateTutor(){
             try {
                 val validationResult = validateUserInfo(updatedInfo)
                 if (validationResult != null) {
-                    call.respond(UserResponse(false, message = "$validationResult - On updating"))
+                    call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "$validationResult - On updating"))
                     return@put
                 }
                 val tutorEmail = updatedInfo.email ?: call.principal<Tutor>()!!.email
@@ -132,15 +134,13 @@ fun Route.updateTutor(){
                 val updateResult = DatabaseConnection.tutorCollection.updateOne(Tutor::_id eq tutorId, updatedTutor)
 
                 if (updateResult.wasAcknowledged()) {
-                    if (call.sessions.get<TutorSession>() == null)
-                        call.sessions.set(TutorSession(updatedTutor.name, generateSessionId()))
                     call.respond(UserResponse(true, updatedTutor, generateToken(updatedTutor)))
                 } else {
-                    call.respond(UserResponse(false, message = "Could not update user"))
+                    call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Could not update user"))
                 }
 
             } catch (e: Exception) {
-                call.respond(UserResponse(false, message = e.message ?: "Could not update user - from catch"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not update user - from catch"))
             }
         }
     }
@@ -164,7 +164,7 @@ fun Route.chatWithTutors() {
                     }
                 }
             } catch (e: Exception) {
-                call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
+                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not send message"))
             } finally {
                 webSocketService.disconnect(tutorSocket)
             }
