@@ -134,6 +134,24 @@ fun Route.tutorRoute() {
                 call.respond(UserResponse(false, message = e.message ?: "Could not update user - from catch"))
             }
         }
+        webSocket(CHAT) {
+            val tutorName = call.principal<Tutor>()!!.name
+            val tutorSocket = TutorSocket(tutorName, this)
+            try{
+                webSocketService.onChatJoined(tutorSocket)
+                for(frame in incoming){
+                    if(frame !is Frame.Text) continue
+                    webSocketService.sendMessage(
+                        frame.readText(),
+                        tutorName
+                    )
+                }
+            }catch (e: Exception){
+                call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
+            }finally {
+                webSocketService.disconnect(tutorSocket)
+            }
+        }
         get(ALL_MESSAGES){
             try {
                 val allMessages = DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
@@ -143,24 +161,6 @@ fun Route.tutorRoute() {
             }catch (e: Exception){
                 call.respond(HttpStatusCode.BadRequest, "Could not retrieve messages")
             }
-        }
-    }
-    webSocket(CHAT) {
-        val tutorName = call.sessions.get<TutorSession>()!!.username
-        val tutorSocket = TutorSocket(tutorName, this)
-        try{
-            webSocketService.onChatJoined(tutorSocket)
-            for(frame in incoming){
-                if(frame !is Frame.Text) continue
-                webSocketService.sendMessage(
-                    frame.readText(),
-                    tutorName
-                )
-            }
-        }catch (e: Exception){
-            call.respond(UserResponse(false, message = e.message ?: "Could not send message"))
-        }finally {
-            webSocketService.disconnect(tutorSocket)
         }
     }
 }
