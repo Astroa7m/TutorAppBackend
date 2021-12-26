@@ -178,7 +178,7 @@ fun Route.getAllMessages(){
         get(ALL_MESSAGES) {
             try {
                 val allMessages =
-                    DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toFlow()
+                    DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
                 call.respond(
                     allMessages
                 )
