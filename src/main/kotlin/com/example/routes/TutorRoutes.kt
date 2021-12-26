@@ -183,7 +183,7 @@ fun Route.getAllMessages(){
                     allMessages
                 )
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest, "Could not retrieve messages")
+                call.respond(HttpStatusCode.BadRequest, "Could not retrieve messages $e")
             }
         }
     }
