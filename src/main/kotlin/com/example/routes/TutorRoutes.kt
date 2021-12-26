@@ -23,6 +23,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.flow.asFlow
 import org.litote.kmongo.eq
 
 // TODO: 9/15/2021 ADD TUTORS SUBJECT TO THE MODEL
@@ -177,7 +178,7 @@ fun Route.getAllMessages(){
         get(ALL_MESSAGES) {
             try {
                 val allMessages =
-                    DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toList()
+                    DatabaseConnection.messagesCollection.find().ascendingSort(Message::timeStamp).toFlow()
                 call.respond(
                     allMessages
                 )
