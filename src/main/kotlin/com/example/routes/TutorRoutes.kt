@@ -147,7 +147,7 @@ fun Route.updateTutor(){
 fun Route.chatWithTutors() {
     authenticate("jwt") {
         webSocket(CHAT) {
-            var closeReason = CloseReason(CloseReason.Codes.NORMAL, "normal reason")
+            lateinit var closeReason : CloseReason
             val tutorName = call.principal<Tutor>()!!.name
             val tutorId = call.principal<Tutor>()!!._id!!
             val tutorSocket = TutorSocket(tutorName, tutorId, this)
@@ -161,6 +161,7 @@ fun Route.chatWithTutors() {
                             tutorName,
                             tutorId
                         )
+                        closeReason = CloseReason(CloseReason.Codes.NORMAL, "normal reason")
                     }
                 }
             } catch (e: Exception) {
