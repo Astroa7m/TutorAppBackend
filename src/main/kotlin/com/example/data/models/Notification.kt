@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 data class Notification(
     @SerialName("included_segments")
     val includedSegments: List<String>,
-    val content: NotificationContent,
-    val header: NotificationContent,
+    val contents: NotificationContent,
+    val headings: NotificationContent,
     @SerialName("app_id")
     val appId: String
 )
