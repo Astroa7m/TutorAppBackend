@@ -1,9 +1,12 @@
 package com.example.routes
 
 import com.example.authentication.JWTService.generateToken
+import com.example.data.CMService
 import com.example.data.DatabaseConnection
 import com.example.data.WebSocketService
 import com.example.data.models.Message
+import com.example.data.models.Notification
+import com.example.data.models.NotificationContent
 import com.example.data.models.TutorSocket
 import com.example.data.models.request.Login
 import com.example.data.models.request.Register
@@ -32,13 +35,16 @@ private const val CHAT = "$USERS/chat"
 
 val webSocketService = WebSocketService()
 
-fun Route.registerTutor(){
+fun Route.registerTutor() {
     post(REGISTER_REQUEST) {
         //taking tutor registration info from server
         val registeredTutor = try {
             call.receive<Register>()
         } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Badly written fields or connection error"))
+            call.respond(
+                HttpStatusCode.BadRequest,
+                UserResponse(false, message = "Badly written fields or connection error")
+            )
             return@post
         }
         try {
@@ -46,7 +52,7 @@ fun Route.registerTutor(){
             /* if the user info entered has any problem a response will will stop the process
             and will notify the user with the problem */
             if (validationResult != null) {
-                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = validationResult))
+                call.respond(HttpStatusCode.BadRequest, UserResponse(false, message = validationResult))
                 return@post
             }
             //if info are valid then create a model and put it into database
@@ -73,12 +79,15 @@ fun Route.registerTutor(){
     }
 }
 
-fun Route.loginTutor(){
+fun Route.loginTutor() {
     post(LOGIN_REQUEST) {
         val loggedInTutor = try {
             call.receive<Login>()
         } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Badly written fields or connection error"))
+            call.respond(
+                HttpStatusCode.BadRequest,
+                UserResponse(false, message = e.message ?: "Badly written fields or connection error")
+            )
             return@post
         }
 
@@ -87,17 +96,20 @@ fun Route.loginTutor(){
             if (userExistenceResult == null
                 || loggedInTutor.password.hashPassword() != userExistenceResult.hashedPassword
             ) {
-                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Email or password is incorrect"))
+                call.respond(HttpStatusCode.BadRequest, UserResponse(false, message = "Email or password is incorrect"))
                 return@post
             }
             call.respond(UserResponse(true, userExistenceResult, generateToken(userExistenceResult)))
         } catch (e: Exception) {
-            call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "error occurred while logging in"))
+            call.respond(
+                HttpStatusCode.BadRequest,
+                UserResponse(false, message = e.message ?: "error occurred while logging in")
+            )
         }
     }
 }
 
-fun Route.updateTutor(){
+fun Route.updateTutor() {
     authenticate("jwt") {
         put(UPDATE_REQUEST) {
             val updatedInfo = try {
@@ -115,7 +127,10 @@ fun Route.updateTutor(){
             try {
                 val validationResult = validateUserInfo(updatedInfo)
                 if (validationResult != null) {
-                    call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "$validationResult - On updating"))
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        UserResponse(false, message = "$validationResult - On updating")
+                    )
                     return@put
                 }
                 val tutorEmail = updatedInfo.email ?: call.principal<Tutor>()!!.email
@@ -132,11 +147,14 @@ fun Route.updateTutor(){
                 if (updateResult.wasAcknowledged()) {
                     call.respond(UserResponse(true, updatedTutor, generateToken(updatedTutor)))
                 } else {
-                    call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = "Could not update user"))
+                    call.respond(HttpStatusCode.BadRequest, UserResponse(false, message = "Could not update user"))
                 }
 
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not update user - from catch"))
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    UserResponse(false, message = e.message ?: "Could not update user - from catch")
+                )
             }
         }
     }
@@ -145,34 +163,56 @@ fun Route.updateTutor(){
 fun Route.chatWithTutors() {
     authenticate("jwt") {
         webSocket(CHAT) {
-            lateinit var closeReason : CloseReason
             val tutorName = call.principal<Tutor>()!!.name
             val tutorId = call.principal<Tutor>()!!._id!!
             val tutorSocket = TutorSocket(tutorName, tutorId, this)
             try {
                 webSocketService.onChatJoined(tutorSocket)
-                for(frame in incoming){
+                for (frame in incoming) {
                     if (frame is Frame.Text) {
-                        val message = frame.readText()
                         webSocketService.sendMessage(
-                            message,
+                            frame.readText(),
                             tutorName,
                             tutorId
                         )
-                        sendNotification(tutorName, message)
-                        closeReason = CloseReason(CloseReason.Codes.NORMAL, "normal reason")
                     }
                 }
             } catch (e: Exception) {
-                closeReason = CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "error occurred $e")
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    UserResponse(false, message = e.message ?: "Could not send message")
+                )
             } finally {
-                webSocketService.disconnect(tutorSocket, closeReason)
+                webSocketService.disconnect(tutorSocket)
             }
         }
     }
 }
 
-fun Route.getAllMessages(){
+fun Route.sendNotification() {
+    authenticate("jwt") {
+        get("/notification") {
+            val messageSender = call.parameters["sender_name"] ?: ""
+            val messageContent = call.parameters["content"] ?: ""
+
+            val successful = CMInstance.service.sendNotification(
+                Notification(
+                    includedSegments = listOf("All"),
+                    contents = NotificationContent(en = messageContent),
+                    headings = NotificationContent(en = messageSender),
+                    appId = CMService.ONE_SIGNAL_APP_ID
+                )
+            )
+            if (successful)
+                call.respond(HttpStatusCode.OK)
+            else
+                call.respond(HttpStatusCode.BadRequest)
+
+        }
+    }
+}
+
+fun Route.getAllMessages() {
     authenticate("jwt") {
         get(ALL_MESSAGES) {
             try {

@@ -71,18 +71,6 @@ fun validateUserInfo(tutorUpdateRequest: Update) : String? {
     return null
 }
 
-
-suspend fun sendNotification(title: String, message: String){
-    CMInstance.service.sendNotification(
-        Notification(
-            includedSegments = listOf("All"),
-            contents = NotificationContent(en = message),
-            headings = NotificationContent(en = title),
-            appId = CMService.ONE_SIGNAL_APP_ID
-        )
-    )
-}
-
 object CMInstance{
     private val client = HttpClient(CIO){
         install(JsonFeature){

@@ -10,16 +10,18 @@ class CMService(
     private val apiKey: String
     ) {
 
-    suspend fun sendNotification(notification: Notification){
-        try {
+    suspend fun sendNotification(notification: Notification) : Boolean{
+        return try {
             client.post<String> {
                 url(BASE_NOTIFICATION_URL)
                 contentType(ContentType.Application.Json)
                 header("Authorization", "Basic $apiKey")
                 body = notification
             }
+            true
         } catch (e: Exception) {
             e.printStackTrace()
+            false
         }
     }
 

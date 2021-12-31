@@ -11,6 +11,7 @@ fun Application.configureRouting() {
         updateTutor()
         chatWithTutors()
         getAllMessages()
+        sendNotification()
 
         addStudent()
         getStudents()
