@@ -2,7 +2,6 @@ package com.example.data
 
 import com.example.data.models.Message
 import com.example.data.models.TutorSocket
-import com.example.util.CMInstance
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
@@ -28,7 +27,6 @@ class WebSocketService {
             timeStamp = System.currentTimeMillis()
         )
         DatabaseConnection.messagesCollection.insertOne(message)
-        CMInstance.sendNotification(senderName, messageText)
         tutors.forEach { tutor ->
             val parsedMessage = Json.encodeToString(message)
             tutor.socket.send(parsedMessage)

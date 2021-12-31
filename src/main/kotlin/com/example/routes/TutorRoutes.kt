@@ -10,9 +10,7 @@ import com.example.data.models.request.Register
 import com.example.data.models.request.Update
 import com.example.data.models.response.UserResponse
 import com.example.data.models.user.Tutor
-import com.example.util.getUserExistenceResult
-import com.example.util.hashPassword
-import com.example.util.validateUserInfo
+import com.example.util.*
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.http.*
@@ -161,6 +159,7 @@ fun Route.chatWithTutors() {
                             tutorName,
                             tutorId
                         )
+                        sendNotification(tutorName, message)
                         closeReason = CloseReason(CloseReason.Codes.NORMAL, "normal reason")
                     }
                 }
