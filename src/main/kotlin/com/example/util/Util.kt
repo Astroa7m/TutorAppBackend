@@ -84,8 +84,8 @@ object CMInstance{
         service.sendNotification(
             Notification(
                 includedSegments = listOf("All"),
-                content = NotificationContent(en = message),
-                header = NotificationContent(en = title),
+                contents = NotificationContent(en = message),
+                headings = NotificationContent(en = title),
                 appId = CMService.ONE_SIGNAL_APP_ID
             )
         )
