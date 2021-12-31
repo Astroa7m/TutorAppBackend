@@ -148,6 +148,7 @@ fun Route.updateTutor(){
 fun Route.chatWithTutors() {
     authenticate("jwt") {
         webSocket(CHAT) {
+            var closeReason = CloseReason(CloseReason.Codes.NORMAL, "normal reason")
             val tutorName = call.principal<Tutor>()!!.name
             val tutorId = call.principal<Tutor>()!!._id!!
             val tutorSocket = TutorSocket(tutorName, tutorId, this)
@@ -165,9 +166,9 @@ fun Route.chatWithTutors() {
                     }
                 }
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest,UserResponse(false, message = e.message ?: "Could not send message"))
+                closeReason = CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "error occurred $e")
             } finally {
-                webSocketService.disconnect(tutorSocket)
+                webSocketService.disconnect(tutorSocket, closeReason)
             }
         }
     }

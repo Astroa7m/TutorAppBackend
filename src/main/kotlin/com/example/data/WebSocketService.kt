@@ -33,8 +33,8 @@ class WebSocketService {
         }
     }
 
-    suspend fun disconnect(tutorSocket: TutorSocket){
-        tutorSocket.socket.close()
+    suspend fun disconnect(tutorSocket: TutorSocket, closeReason: CloseReason){
+        tutorSocket.socket.close(closeReason)
         if(tutors.contains(tutorSocket))
             tutors-= tutorSocket
     }
