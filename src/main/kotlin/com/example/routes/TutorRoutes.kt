@@ -4,13 +4,13 @@ import com.example.authentication.JWTService.generateToken
 import com.example.data.DatabaseConnection
 import com.example.data.WebSocketService
 import com.example.data.models.Message
-import com.example.data.models.TutorSession
 import com.example.data.models.TutorSocket
 import com.example.data.models.request.Login
 import com.example.data.models.request.Register
 import com.example.data.models.request.Update
 import com.example.data.models.response.UserResponse
 import com.example.data.models.user.Tutor
+import com.example.util.CMInstance
 import com.example.util.getUserExistenceResult
 import com.example.util.hashPassword
 import com.example.util.validateUserInfo
@@ -21,9 +21,7 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.sessions.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.flow.asFlow
 import org.litote.kmongo.eq
 
 // TODO: 9/15/2021 ADD TUTORS SUBJECT TO THE MODEL
@@ -157,11 +155,13 @@ fun Route.chatWithTutors() {
                 webSocketService.onChatJoined(tutorSocket)
                 for(frame in incoming){
                     if (frame is Frame.Text) {
+                        val message = frame.readText()
                         webSocketService.sendMessage(
-                            frame.readText(),
+                            message,
                             tutorName,
                             tutorId
                         )
+                        CMInstance.sendNotification(tutorName, message)
                     }
                 }
             } catch (e: Exception) {

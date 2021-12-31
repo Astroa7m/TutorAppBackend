@@ -1,9 +1,16 @@
 package com.example.util
 
+import com.example.data.CMService
 import com.example.data.DatabaseConnection
+import com.example.data.models.Notification
+import com.example.data.models.NotificationContent
 import com.example.data.models.request.Register
 import com.example.data.models.request.Update
 import com.example.data.models.user.Tutor
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
 import io.ktor.util.*
 import org.litote.kmongo.eq
 import java.util.regex.Matcher
@@ -64,3 +71,24 @@ fun validateUserInfo(tutorUpdateRequest: Update) : String? {
     return null
 }
 
+object CMInstance{
+    private val client = HttpClient(CIO){
+        install(JsonFeature){
+            serializer = KotlinxSerializer()
+        }
+    }
+    private val apiKey = System.getenv("API_KEY")
+    private val service = CMService(client, apiKey)
+
+    suspend fun sendNotification(title: String, message: String){
+        service.sendNotification(
+            Notification(
+                includedSegments = listOf("All"),
+                content = NotificationContent(en = message),
+                header = NotificationContent(en = title),
+                appId = CMService.ONE_SIGNAL_APP_ID
+            )
+        )
+    }
+
+}
