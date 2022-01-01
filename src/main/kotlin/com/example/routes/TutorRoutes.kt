@@ -4,10 +4,7 @@ import com.example.authentication.JWTService.generateToken
 import com.example.data.CMService
 import com.example.data.DatabaseConnection
 import com.example.data.WebSocketService
-import com.example.data.models.Message
-import com.example.data.models.Notification
-import com.example.data.models.NotificationContent
-import com.example.data.models.TutorSocket
+import com.example.data.models.*
 import com.example.data.models.request.Login
 import com.example.data.models.request.Register
 import com.example.data.models.request.Update
@@ -32,6 +29,7 @@ private const val LOGIN_REQUEST = "$USERS/login"
 private const val UPDATE_REQUEST = "$USERS/update"
 private const val ALL_MESSAGES = "$USERS/all-messages"
 private const val CHAT = "$USERS/chat"
+private const val SEND_NOTIFICATION = "$USERS/send-notification"
 
 val webSocketService = WebSocketService()
 
@@ -191,15 +189,18 @@ fun Route.chatWithTutors() {
 
 fun Route.sendNotification() {
     authenticate("jwt") {
-        get("notification") {
-            val messageSender = call.parameters["sender_name"] ?: " "
-            val messageContent = call.parameters["content"] ?: " "
-
+        post(SEND_NOTIFICATION) {
+            val notificationMessage = try{
+                call.receive<NotificationMessage>()
+            }catch(e: Exception){
+                call.respond(HttpStatusCode.BadRequest)
+                return@post
+            }
             val successful = CMInstance.service.sendNotification(
                 Notification(
                     includedSegments = listOf("All"),
-                    contents = NotificationContent(en = messageContent),
-                    headings = NotificationContent(en = messageSender),
+                    contents = NotificationContent(en = notificationMessage.message),
+                    headings = NotificationContent(en = notificationMessage.senderName),
                     appId = CMService.ONE_SIGNAL_APP_ID
                 )
             )
