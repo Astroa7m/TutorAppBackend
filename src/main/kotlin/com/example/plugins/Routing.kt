@@ -6,12 +6,12 @@ import io.ktor.routing.*
 
 fun Application.configureRouting() {
     routing {
+        sendNotification()
         registerTutor()
         loginTutor()
         updateTutor()
         chatWithTutors()
         getAllMessages()
-        sendNotification()
 
         addStudent()
         getStudents()
