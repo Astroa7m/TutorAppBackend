@@ -188,7 +188,6 @@ fun Route.chatWithTutors() {
 }
 
 fun Route.sendNotification() {
-    authenticate("jwt") {
         post(SEND_NOTIFICATION) {
             val notificationMessage = try{
                 call.receive<NotificationMessage>()
@@ -210,7 +209,6 @@ fun Route.sendNotification() {
                 call.respond(HttpStatusCode.BadRequest)
 
         }
-    }
 }
 
 fun Route.getAllMessages() {
