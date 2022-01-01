@@ -195,19 +195,20 @@ fun Route.sendNotification() {
                 call.respond(HttpStatusCode.BadRequest)
                 return@post
             }
-            val successful = CMInstance.service.sendNotification(
-                Notification(
-                    includedSegments = listOf("All"),
-                    contents = NotificationContent(en = notificationMessage.message),
-                    headings = NotificationContent(en = notificationMessage.senderName),
-                    appId = CMService.ONE_SIGNAL_APP_ID
+            try{
+                CMInstance.service.sendNotification(
+                    Notification(
+                        includedSegments = listOf("All"),
+                        contents = NotificationContent(en = notificationMessage.message),
+                        headings = NotificationContent(en = notificationMessage.senderName),
+                        appId = CMService.ONE_SIGNAL_APP_ID
+                    )
                 )
-            )
-            if (successful)
                 call.respond(HttpStatusCode.OK)
-            else
-                call.respond(HttpStatusCode.BadRequest)
+            }catch(e: Exception){
+                call.respond(HttpStatusCode.BadRequest, e.toString())
 
+            }
         }
 }
 
