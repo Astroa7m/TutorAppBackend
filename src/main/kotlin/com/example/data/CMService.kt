@@ -12,7 +12,7 @@ class CMService(
 
     suspend fun sendNotification(notification: Notification) : Boolean{
         return try {
-            client.post<String>{
+            client.post<Unit>{
                 url(BASE_NOTIFICATION_URL)
                 contentType(ContentType.Application.Json)
                 header("Authorization", "Basic $apiKey")
