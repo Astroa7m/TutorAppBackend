@@ -191,9 +191,9 @@ fun Route.chatWithTutors() {
 
 fun Route.sendNotification() {
     authenticate("jwt") {
-        get("/notification") {
-            val messageSender = call.parameters["sender_name"] ?: ""
-            val messageContent = call.parameters["content"] ?: ""
+        get("notification") {
+            val messageSender = call.parameters["sender_name"] ?: " "
+            val messageContent = call.parameters["content"] ?: " "
 
             val successful = CMInstance.service.sendNotification(
                 Notification(
